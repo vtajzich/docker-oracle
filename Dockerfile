@@ -6,11 +6,8 @@ RUN yum -y install nc
 
 USER oracle
 
-ADD image_content/patch_dockerInitScript.sh /tmp/
-ADD image_content/start.sh /tmp/
-
-COPY image_content/startup-scripts/*.sql /docker-initdb/startup/
-COPY image_content/setup-scripts/*.sql /docker-initdb/setup/
+ADD patch_dockerInitScript.sh /tmp/
+ADD start.sh /tmp/
 
 RUN /tmp/patch_dockerInitScript.sh
 
