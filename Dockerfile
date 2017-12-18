@@ -4,14 +4,13 @@ USER root
 
 RUN yum -y install nc
 
+RUN mkdir -p /docker-initdb/startup && mkdir -p /docker-initdb/setup
+
 USER oracle
 
 ADD patch_dockerInitScript.sh /tmp/
 ADD start.sh /tmp/
 
 RUN /tmp/patch_dockerInitScript.sh
-
-VOLUME /docker-initdb/startup
-VOLUME /docker-initdb/setup
 
 CMD /tmp/start.sh

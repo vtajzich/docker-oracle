@@ -1,3 +1,30 @@
+function wait_for_db_to_be_ready_to_serve() {
+
+    echo ""
+	echo "Waiting for DB to be ready ... "
+    
+	lsnrctl status LISTENER | grep 'Instance ".*", status READY' > /dev/null
+
+	status_grep=$?
+
+	while [ $status_grep -ne 0 ]
+	do
+        
+		sleep 5s
+        lsnrctl status LISTENER | grep 'Instance ".*", status READY' > /dev/null
+        
+        status_grep=$?
+        
+	done
+
+	echo ""
+	echo ""
+
+	lsnrctl status LISTENER
+	
+	echo ""
+	echo ""
+}
 
 function run_scripts() {
 
@@ -25,33 +52,47 @@ function run_scripts() {
 
 source /home/oracle/setup/dockerInit.sh
 
-echo ""
-echo ""
-echo ""
-echo "Going to run startup scripts"
-echo ""
-echo ""
-echo ""
 
-run_scripts /docker-initdb/startup "/ as sysdba"
+if [ ! -f /home/oracle/startup-finished ]; then
 
-echo ""
-echo ""
-echo ""
-echo "Going to run setup scripts"
-echo ""
-echo ""
-echo ""
+	echo ""
+	echo ""
+	echo ""
+	echo "Going to run startup scripts"
+	echo ""
+	echo ""
+	echo ""
 
-run_scripts /docker-initdb/setup "${DB_USER}/${DB_PASSWORD}"
+	run_scripts /docker-initdb/startup "/ as sysdba"    
 
+	touch /home/oracle/startup-finished
+fi
 
-echo "DB setup complete."
+if [ ! -f /home/oracle/setup-finished ]; then
+
+	echo ""
+	echo ""
+	echo ""
+	echo "Going to run setup scripts"
+	echo ""
+	echo ""
+	echo ""
+
+	run_scripts /docker-initdb/setup "${DB_USER}/${DB_PASSWORD}"
+
+	touch /home/oracle/setup-finished
+fi
+
+echo "DB setup complete"
+
+wait_for_db_to_be_ready_to_serve
+
+echo "DB is ready to serve"
 
 # open port for checking if DB is up and running
 nc -l -k -p 9999
 
 # just need to keep it running
 while true; do
-	sleep 1m
+	sleep 5m
 done;
